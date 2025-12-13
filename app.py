@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from datetime import date as dt_class, timedelta
+import io
 
 # ==========================================
 #  CONFIGURATION & ASSETS
@@ -25,7 +26,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Robust loader function (Prevents crashes if URL fails)
+# Robust loader function
 def load_lottieurl(url: str):
     try:
         r = requests.get(url)
@@ -35,7 +36,7 @@ def load_lottieurl(url: str):
     except:
         return None
 
-# Load Assets (Using more stable URLs)
+# Load Assets
 lottie_supply = load_lottieurl("https://lottie.host/5aee9302-3c22-4a00-9a4d-f21051564756/L8j8j7zZ7o.json") 
 lottie_ai = load_lottieurl("https://lottie.host/02e6f217-3b36-4700-999a-3647413d077f/2JjJ8j8j8j.json") 
 
@@ -75,9 +76,12 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
     }
-    [data-testid="stMetricValue"] {
-        font-size: 2.5rem !important;
-        color: #10B981;
+    .recommendation-box {
+        background-color: #e0f2fe;
+        border-left: 5px solid #0284c7;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -125,6 +129,17 @@ def build_pipeline(model_type, numeric_cols, cat_cols):
         model = RandomForestRegressor(n_estimators=100)
     return Pipeline(steps=[('preprocessor', preprocessor), ('model', model)])
 
+def get_ai_recommendation(demand, price, discount):
+    """Simple rule-based logic to mimic AI advice"""
+    if demand > 200:
+        return "🚀 **High Demand Alert:** Sales are surging! Consider **increasing price by 5-10%** to maximize margins. Ensure inventory is stocked up immediately."
+    elif demand < 50:
+        return "⚠️ **Low Demand Warning:** Sales are below average. Recommended action: **Launch a 20% discount campaign** or bundle with high-velocity items."
+    elif discount > 15 and demand < 100:
+        return "📉 **Ineffective Promotion:** Heavy discounts aren't driving volume. Stop the promotion to save margin."
+    else:
+        return "✅ **Stable Market:** Operations are normal. Maintain current inventory levels and pricing strategy."
+
 # ==========================================
 #  MAIN APP
 # ==========================================
@@ -132,7 +147,6 @@ def build_pipeline(model_type, numeric_cols, cat_cols):
 # --- HERO SECTION ---
 col_logo, col_title = st.columns([1, 4])
 with col_logo:
-    # FIXED: Added safety check
     if lottie_supply:
         st_lottie(lottie_supply, height=120, key="logo_anim")
     else:
@@ -220,7 +234,6 @@ if raw_df is not None:
                 st.success(f"Model calibrated with Mean Absolute Error: {mae:.2f}")
 
         with c2:
-            # FIXED: Added safety check
             if lottie_ai:
                 st_lottie(lottie_ai, height=200, key="ai_anim")
 
@@ -260,6 +273,7 @@ if raw_df is not None:
                 prediction = max(0, int(model.predict(pred_df[feats])[0]))
                 revenue = prediction * sel_price
                 
+                # --- VISUAL RESULTS ---
                 st.markdown(f"""
                 <div style="background-color: #f0fdf4; border: 2px solid #10B981; border-radius: 15px; padding: 20px; text-align: center;">
                     <h2 style="margin:0; color: #064E3B;">Predicted Demand</h2>
@@ -268,11 +282,24 @@ if raw_df is not None:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                c_a, c_b = st.columns(2)
-                with c_a: st.metric("Proj. Revenue", f"₹{revenue:,}")
-                with c_b: 
-                    delta = prediction - 100
-                    st.metric("Growth vs Avg", f"{prediction}", f"{delta} units")
+                # --- NEW FEATURE: AI RECOMMENDATION ---
+                advice = get_ai_recommendation(prediction, sel_price, sel_discount)
+                st.markdown(f'<div class="recommendation-box"><h3>🤖 Strategic Advisor</h3><p>{advice}</p></div>', unsafe_allow_html=True)
+                
+                # --- NEW FEATURE: EXPORT ---
+                csv_buffer = io.StringIO()
+                pred_df['predicted_demand'] = prediction
+                pred_df['predicted_revenue'] = revenue
+                pred_df.to_csv(csv_buffer, index=False)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.download_button(
+                    label="📥 Download Forecast Report",
+                    data=csv_buffer.getvalue(),
+                    file_name=f"forecast_{sel_food}_{sel_date}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
 
     with tab3:
         st.markdown("### Market Intelligence")
@@ -294,7 +321,6 @@ else:
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     col_c, col_d, col_e = st.columns([1,2,1])
     with col_d:
-        # FIXED: Added safety check
         if lottie_supply:
             st_lottie(lottie_supply, height=300, key="welcome")
         else:
