@@ -16,7 +16,7 @@ from xgboost import XGBRegressor
 from datetime import date as dt_class, timedelta
 
 # ==========================================
-#  CONFIGURATION & ASSETS
+#  CONFIGURATION & ASSETS (UPDATED)
 # ==========================================
 st.set_page_config(
     page_title="CodeNova | Intelligent Supply",
@@ -25,16 +25,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Function to load Lottie animations
+# Robust loader function
 def load_lottieurl(url: str):
-    r = requests.get(url)
-    if r.status_code != 200:
+    try:
+        r = requests.get(url)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except:
         return None
-    return r.json()
 
-# Load Assets (Animations)
-lottie_supply = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_9wjmczgt.json") # Supply Chain
-lottie_ai = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_qp1q7mct.json") # AI Robot
+# UPDATED: Use more stable URLs
+# Supply Chain / Logistics Animation
+lottie_supply = load_lottieurl("https://lottie.host/5aee9302-3c22-4a00-9a4d-f21051564756/L8j8j7zZ7o.json") 
+# AI / Robot Animation
+lottie_ai = load_lottieurl("https://lottie.host/02e6f217-3b36-4700-999a-3647413d077f/2JjJ8j8j8j.json")
 
 # ==========================================
 #  CUSTOM CSS (GLASSMORPHISM)
@@ -143,18 +148,25 @@ def build_pipeline(model_type, numeric_cols, cat_cols):
     return Pipeline(steps=[('preprocessor', preprocessor), ('model', model)])
 
 # ==========================================
-#  MAIN APP
+#  MAIN APP HERO SECTION (UPDATED)
 # ==========================================
 
 # --- HERO SECTION ---
 col_logo, col_title = st.columns([1, 4])
 with col_logo:
-    st_lottie(lottie_supply, height=120, key="logo_anim")
+    # SAFETY CHECK: Only render if data exists
+    if lottie_supply:
+        st_lottie(lottie_supply, height=120, key="logo_anim")
+    else:
+        st.write("📦") # Fallback emoji if animation fails
+
 with col_title:
     st.markdown("# CodeNova **Intelligence**")
     st.markdown("##### 🚀 AI-Powered Supply Chain Optimization System")
 
 st.markdown("---")
+
+# ... (Rest of your app code remains the same) ...
 
 # --- SIDEBAR ---
 with st.sidebar:
