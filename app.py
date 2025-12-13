@@ -92,7 +92,7 @@ st.markdown("""
 @st.cache_data
 def generate_demo_data():
     dates = pd.date_range(start="2023-01-01", periods=1000)
-    foods = ["Avocados 🥑", "Whole Milk 🥛", "Sourdough Bread 🍞", "Chicken Breast 🍗", "Strawberries 🍓"]
+    foods = ["Avocados 🥑", "Whole Milk 🥛", "Sourdough Bread 🍞", "French toast", "Strawberries 🍓"]
     data = []
     for date in dates:
         for food in foods:
@@ -161,7 +161,6 @@ st.markdown("---")
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/1046/1046762.png", width=50)
     st.markdown("### Control Tower")
-    st.info("💡 **Tip:** Use 'Demo Data' to simulate a live environment for the hackathon.")
     data_source = st.radio("Data Source", ["Use Demo Data", "Upload CSV"], horizontal=True)
     
     raw_df = None
