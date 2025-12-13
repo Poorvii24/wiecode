@@ -1,4 +1,4 @@
-%%writefile app.py
+#%%writefile app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -326,3 +326,4 @@ else:
             st.write("🚛")
         st.markdown("<h3 style='text-align: center;'>Ready to optimize your supply chain?</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center;'>Click <b>'Reset / Load Demo'</b> in the sidebar to begin.</p>", unsafe_allow_html=True)
+
