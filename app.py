@@ -250,25 +250,32 @@ if raw_df is not None:
                 sel_discount = st.select_slider("Promotional Discount", options=[0, 5, 10, 15, 20, 25, 50], value=0)
                 sel_date = st.date_input("Forecast Date", value=dt_class.today() + timedelta(days=1))
             
+            # ... inside tab2 ...
             with sim_col2:
                 d_val = pd.to_datetime(sel_date)
                 input_row = st.session_state['last_row'].to_dict()
                 input_row.update({
                     'date': d_val,
-                    'food_name': sel_food,
-                    'price_per_unit': sel_price,
-                    'discount_pct': sel_discount,
-                    'month': d_val.month,
-                    'day_of_week': d_val.day_name(),
-                    'is_weekend': 1 if d_val.weekday() >= 5 else 0
+                    'food_name': str(sel_food),  # Ensure String
+                    'price_per_unit': float(sel_price), # Ensure Float
+                    'discount_pct': float(sel_discount), # Ensure Float
+                    'month': int(d_val.month), # Ensure Int
+                    'day_of_week': str(d_val.day_name()), # Ensure String
+                    'is_weekend': int(1 if d_val.weekday() >= 5 else 0)
                 })
                 
                 model = st.session_state['model']
                 feats = st.session_state['train_feats']
+                
+                # Create DataFrame
                 pred_df = pd.DataFrame([input_row])
+                
+                # SAFETY LOOP: Ensure all columns exist and types match
                 for f in feats:
-                    if f not in pred_df.columns: pred_df[f] = 0
-                    
+                    if f not in pred_df.columns:
+                        pred_df[f] = 0
+                
+                # Make prediction
                 prediction = max(0, int(model.predict(pred_df[feats])[0]))
                 revenue = prediction * sel_price
                 
@@ -326,4 +333,5 @@ else:
             st.write("🚛")
         st.markdown("<h3 style='text-align: center;'>Ready to optimize your supply chain?</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center;'>Click <b>'Reset / Load Demo'</b> in the sidebar to begin.</p>", unsafe_allow_html=True)
+
 
